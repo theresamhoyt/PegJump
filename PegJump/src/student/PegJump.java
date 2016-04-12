@@ -24,19 +24,17 @@ public class PegJump {
 	// initialize variables
 	private static boolean[] pegs = null;
 	private static int pegCount = 0;
+	private static int nodeCount = 0;	
 	private static double jumpCount = 0;
+
 
 	// returns a monte-carlo estimate of the number of promising nodes in the
 	// search tree.
 	public static double estimatePegJump(PegJumpPuzzle puzzle) {
-		return 1000.0;     // a guess
+		return 10000;     // a guess
 	}
 
-	// simple example routine that just repeatedly finds the first valid
-	// jump until it fails
-	// this returns:
-	//   the number of jumps tried
-	//   and as a modifiable argument, it fills in the jumpList
+	// solves the puzzle
 	public static double solvePegJump(PegJumpPuzzle puzzle, ArrayList<Jump> jumpList) 
 	{	
 
@@ -56,32 +54,38 @@ public class PegJump {
 			// do a jump and add it to the jump list
 			// recursively call solvePeg to get next jump
 			if(validJump(j)){
+				nodeCount++;
 				jumpList.add(makeJump(j));
-				solvePegJump(puzzle, jumpList);
+
+				if(!seenBoards.contains(puzzle)){
+					solvePegJump(puzzle, jumpList);
+				}else{
+					PegJumpPuzzle p = puzzle;
+					seenBoards.add(p);
+				}
 			}
+
 		}
 		// checks to see if the puzzle is solved
 		// this is when there is only one peg left
 		if(solved(pegCount, puzzle)){
-			return 0;
+			return nodeCount;
 		}
 
 		// puzzle not complete
 		// need to backtrack
 		backtrack(jumpList);
 
-		return 0;
-
+		return nodeCount;
 	}
 
-
+	// backtracking algorithm
+	// undoes the last jump 
+	// and removes the last jump from the jumpList
 	private static ArrayList<Jump> backtrack(ArrayList<Jump> jumpList){
 
 		undoJump(jumpList.get(jumpList.size()-1));
 		jumpList.remove(jumpList.size()-1);
-
-		printJumpList(jumpList);
-		System.out.println();
 		return jumpList;
 	}
 
@@ -99,7 +103,7 @@ public class PegJump {
 		int from = jump.getFrom();
 		int over = jump.getOver();
 		int dest = jump.getDest();
-
+		
 		if( pegs[from] && 
 				pegs[over] && 
 				!pegs[dest] )
